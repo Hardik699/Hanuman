@@ -2,7 +2,10 @@ import * as fileStore from "./store";
 
 let selected: any = fileStore;
 const HAS_DB = Boolean(
-  process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL,
+  process.env.DATABASE_URL ||
+    process.env.NETLIFY_DATABASE_URL ||
+    process.env.NETLIFY_DATABASE_URL_UNPOOLED ||
+    process.env.POSTGRES_URL,
 );
 
 if (HAS_DB) {

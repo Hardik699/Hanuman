@@ -59,6 +59,39 @@ export default function DeployPage() {
     }
   };
 
+  // Simple env KV editor (for guidance + local testing)
+  type EnvRow = { key: string; value: string };
+  const [envs, setEnvs] = useState<EnvRow[]>([
+    { key: "DATABASE_URL", value: "" },
+    { key: "NETLIFY_DATABASE_URL", value: "" },
+    { key: "NETLIFY_DATABASE_URL_UNPOOLED", value: "" },
+  ]);
+  const updateEnv = (i: number, patch: Partial<EnvRow>) => {
+    setEnvs((prev) =>
+      prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)),
+    );
+  };
+  const addEnv = () => setEnvs((p) => [...p, { key: "", value: "" }]);
+  const removeEnv = (i: number) =>
+    setEnvs((p) => p.filter((_, idx) => idx !== i));
+
+  const testEnteredDbUrl = async () => {
+    const row = envs.find((r) => r.value && /postgres/i.test(r.value));
+    if (!row) return alert("Enter a Postgres connection string in Value.");
+    try {
+      const r = await fetch("/api/config/test-db", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: row.value }),
+      });
+      const j = await r.json();
+      if (r.ok && j?.connected) alert("DB URL is valid and reachable.");
+      else alert(`DB test failed: ${j?.error || "Unknown error"}`);
+    } catch (e: any) {
+      alert(`DB test failed: ${e?.message || e}`);
+    }
+  };
+
   const syncAll = async () => {
     if (syncing) return;
     setSyncing(true);
@@ -185,6 +218,62 @@ export default function DeployPage() {
                   Backfill Categories
                 </Button>
               </div>
+
+              {/* Env KV inputs for provider setup */}
+              <div className="mt-4 space-y-2">
+                <p className="text-sm text-slate-400">
+                  Add the following Key/Value in your hosting provider (Netlify
+                  → Site settings → Environment variables):
+                </p>
+                {envs.map((row, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input
+                      className="w-1/2 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm"
+                      placeholder="KEY (e.g. DATABASE_URL)"
+                      value={row.key}
+                      onChange={(e) => updateEnv(i, { key: e.target.value })}
+                    />
+                    <input
+                      className="flex-1 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm"
+                      placeholder="VALUE (paste Postgres URL)"
+                      value={row.value}
+                      onChange={(e) => updateEnv(i, { value: e.target.value })}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-slate-600"
+                      onClick={() => removeEnv(i)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-slate-600"
+                    onClick={addEnv}
+                  >
+                    Add Variable
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-slate-600"
+                    onClick={testEnteredDbUrl}
+                  >
+                    <ServerCog className="h-4 w-4 mr-2" /> Test DB URL
+                  </Button>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Required: set at least one of DATABASE_URL or
+                  NETLIFY_DATABASE_URL (or NETLIFY_DATABASE_URL_UNPOOLED). After
+                  saving, redeploy without cache, then click Check.
+                </p>
+              </div>
+
               {lastSync ? (
                 <p className="text-xs text-slate-400">Last sync: {lastSync}</p>
               ) : null}
