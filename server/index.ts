@@ -12,7 +12,12 @@ import {
   syncHRDataToGoogleSheets,
 } from "./services/googleSheets";
 
-const HAS_DB = !!(process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL);
+const HAS_DB = !!(
+  process.env.DATABASE_URL ||
+  process.env.NETLIFY_DATABASE_URL ||
+  process.env.NETLIFY_DATABASE_URL_UNPOOLED ||
+  process.env.POSTGRES_URL
+);
 
 export function createServer() {
   const app = express();
