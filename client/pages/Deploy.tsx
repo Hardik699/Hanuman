@@ -67,10 +67,13 @@ export default function DeployPage() {
     { key: "NETLIFY_DATABASE_URL_UNPOOLED", value: "" },
   ]);
   const updateEnv = (i: number, patch: Partial<EnvRow>) => {
-    setEnvs((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+    setEnvs((prev) =>
+      prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)),
+    );
   };
   const addEnv = () => setEnvs((p) => [...p, { key: "", value: "" }]);
-  const removeEnv = (i: number) => setEnvs((p) => p.filter((_, idx) => idx !== i));
+  const removeEnv = (i: number) =>
+    setEnvs((p) => p.filter((_, idx) => idx !== i));
 
   const testEnteredDbUrl = async () => {
     const row = envs.find((r) => r.value && /postgres/i.test(r.value));
@@ -218,7 +221,10 @@ export default function DeployPage() {
 
               {/* Env KV inputs for provider setup */}
               <div className="mt-4 space-y-2">
-                <p className="text-sm text-slate-400">Add the following Key/Value in your hosting provider (Netlify → Site settings → Environment variables):</p>
+                <p className="text-sm text-slate-400">
+                  Add the following Key/Value in your hosting provider (Netlify
+                  → Site settings → Environment variables):
+                </p>
                 {envs.map((row, i) => (
                   <div key={i} className="flex gap-2">
                     <input
@@ -233,16 +239,39 @@ export default function DeployPage() {
                       value={row.value}
                       onChange={(e) => updateEnv(i, { value: e.target.value })}
                     />
-                    <Button variant="outline" size="sm" className="border-slate-600" onClick={() => removeEnv(i)}>Remove</Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-slate-600"
+                      onClick={() => removeEnv(i)}
+                    >
+                      Remove
+                    </Button>
                   </div>
                 ))}
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="border-slate-600" onClick={addEnv}>Add Variable</Button>
-                  <Button variant="outline" size="sm" className="border-slate-600" onClick={testEnteredDbUrl}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-slate-600"
+                    onClick={addEnv}
+                  >
+                    Add Variable
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-slate-600"
+                    onClick={testEnteredDbUrl}
+                  >
                     <ServerCog className="h-4 w-4 mr-2" /> Test DB URL
                   </Button>
                 </div>
-                <p className="text-xs text-slate-500">Required: set at least one of DATABASE_URL or NETLIFY_DATABASE_URL (or NETLIFY_DATABASE_URL_UNPOOLED). After saving, redeploy without cache, then click Check.</p>
+                <p className="text-xs text-slate-500">
+                  Required: set at least one of DATABASE_URL or
+                  NETLIFY_DATABASE_URL (or NETLIFY_DATABASE_URL_UNPOOLED). After
+                  saving, redeploy without cache, then click Check.
+                </p>
               </div>
 
               {lastSync ? (
