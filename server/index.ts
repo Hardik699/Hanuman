@@ -11,7 +11,6 @@ import {
   getHRSpreadsheetInfo,
   syncHRDataToGoogleSheets,
 } from "./services/googleSheets";
-import { hrRouter } from "./routes/hr";
 
 const HAS_DB = !!(process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL);
 
