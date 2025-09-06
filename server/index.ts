@@ -79,21 +79,21 @@ export function createServer() {
 
   // HR/IT API (DB-backed)
   if (HAS_DB) {
-    app.use("/api/hr", hrRouter());
+    import("./routes/hr")
+      .then((m) => {
+        app.use("/api/hr", m.hrRouter());
 
-    if (process.env.AUTO_WIPE_IT_HR === "1") {
-      import("./routes/hr")
-        .then(async (m) => {
-          try {
-            await m.wipeDirect?.();
-          } catch {}
-        })
-        .catch(() => {});
-    }
+        if (process.env.AUTO_WIPE_IT_HR === "1") {
+          Promise.resolve(m.wipeDirect?.()).catch(() => {});
+        }
 
-    if (process.env.AUTO_SEED_DEMO === "1") {
-      import("./routes/hr").then((m) => m.seedDemoDirect?.(10)).catch(() => {});
-    }
+        if (process.env.AUTO_SEED_DEMO === "1") {
+          Promise.resolve(m.seedDemoDirect?.(10)).catch(() => {});
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to initialize HR routes:", err?.message || err);
+      });
   }
 
   // One-time migration (file store -> Postgres/Neon)
