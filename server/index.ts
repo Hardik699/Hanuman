@@ -82,6 +82,26 @@ export function createServer() {
   // Salaries API
   app.use("/api/salaries", salariesRouter());
 
+  // Config helpers (available regardless of DB)
+  app.post("/api/config/test-db", async (req, res) => {
+    try {
+      const url = (req.body?.url || req.body?.databaseUrl || "").trim();
+      if (!url) return res.status(400).json({ ok: false, error: "Missing url" });
+      const { Pool } = await import("pg");
+      const pool = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
+      try {
+        const r = await pool.query("SELECT 1 AS ok");
+        await pool.end();
+        return res.json({ ok: true, connected: true, result: r?.rows?.[0]?.ok === 1 });
+      } catch (e: any) {
+        await pool.end().catch(() => {});
+        return res.status(400).json({ ok: false, connected: false, error: e?.message || String(e) });
+      }
+    } catch (e: any) {
+      return res.status(500).json({ ok: false, error: e?.message || "Failed to test" });
+    }
+  });
+
   // HR/IT API (DB-backed)
   if (HAS_DB) {
     import("./routes/hr")
