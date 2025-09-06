@@ -59,6 +59,36 @@ export default function DeployPage() {
     }
   };
 
+  // Simple env KV editor (for guidance + local testing)
+  type EnvRow = { key: string; value: string };
+  const [envs, setEnvs] = useState<EnvRow[]>([
+    { key: "DATABASE_URL", value: "" },
+    { key: "NETLIFY_DATABASE_URL", value: "" },
+    { key: "NETLIFY_DATABASE_URL_UNPOOLED", value: "" },
+  ]);
+  const updateEnv = (i: number, patch: Partial<EnvRow>) => {
+    setEnvs((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  };
+  const addEnv = () => setEnvs((p) => [...p, { key: "", value: "" }]);
+  const removeEnv = (i: number) => setEnvs((p) => p.filter((_, idx) => idx !== i));
+
+  const testEnteredDbUrl = async () => {
+    const row = envs.find((r) => r.value && /postgres/i.test(r.value));
+    if (!row) return alert("Enter a Postgres connection string in Value.");
+    try {
+      const r = await fetch("/api/config/test-db", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: row.value }),
+      });
+      const j = await r.json();
+      if (r.ok && j?.connected) alert("DB URL is valid and reachable.");
+      else alert(`DB test failed: ${j?.error || "Unknown error"}`);
+    } catch (e: any) {
+      alert(`DB test failed: ${e?.message || e}`);
+    }
+  };
+
   const syncAll = async () => {
     if (syncing) return;
     setSyncing(true);
